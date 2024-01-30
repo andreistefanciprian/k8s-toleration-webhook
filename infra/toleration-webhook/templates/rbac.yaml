@@ -1,0 +1,25 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "toleration-webhook.fullname" . }}
+  labels:
+    {{- include "toleration-webhook.labels" . | nindent 4 }}
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "toleration-webhook.fullname" . }}
+  labels:
+    {{- include "toleration-webhook.labels" . | nindent 4 }}
+subjects:
+- kind: ServiceAccount
+  name: {{ include "toleration-webhook.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: {{ include "toleration-webhook.fullname" . }}
+  apiGroup: rbac.authorization.k8s.io

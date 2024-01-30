@@ -1,0 +1,12 @@
+========= Here is a helping hand to debug this webhook =========
+
+1. Display the application logs by running this command:
+kubectl logs -l app.kubernetes.io/name=toleration-webhook --namespace {{ .Release.Namespace }} -f
+
+2. Fetch generated manifests for toleration-webhook using one of these commands:
+helm get manifest toleration-webhook -n {{ .Release.Namespace }}
+helm get all toleration-webhook -n {{ .Release.Namespace }}
+
+3. Check toleration-webhook was successfuly installed:
+helm list -n {{ .Release.Namespace }}
+kubectl get all -n {{ .Release.Namespace }}

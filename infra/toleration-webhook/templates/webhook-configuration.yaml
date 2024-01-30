@@ -1,0 +1,33 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: {{ include "toleration-webhook.fullname" . }}
+  labels:
+    {{- include "toleration-webhook.labels" . | nindent 4 }}
+  annotations:
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "toleration-webhook.fullname" . }} # This is the cert-manager certificate name
+webhooks:
+  - name: {{ include "toleration-webhook.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+    admissionReviewVersions:
+      - "v1beta1"
+    sideEffects: "None"
+    timeoutSeconds: 30
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods"]
+        scope: "Namespaced"
+    namespaceSelector:
+      matchExpressions:
+      - key: toleration-webhook
+        operator: In
+        values:
+        - enabled
+    objectSelector: {}
+    clientConfig:
+      service:
+        name: {{ include "toleration-webhook.fullname" . }}
+        namespace: {{ .Release.Namespace }}
+        path: /mutate
+    failurePolicy: Ignore # Fail means that the API request will fail if the webhook fails. Ignore means that the API request will succeed even if the webhook fails.

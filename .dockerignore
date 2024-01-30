@@ -1,0 +1,10 @@
+*.md
+.gitignore
+*.yaml
+*.json
+infra
+.github
+LICENSE
+.debug
+.git
+.cache
