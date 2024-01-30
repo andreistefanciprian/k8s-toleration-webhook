@@ -68,7 +68,7 @@ func parseRequest(w http.ResponseWriter, r *http.Request) (*v1beta1.AdmissionRev
 	// DEBUG
 	// Print string(body) when you want to see the AdmissionReview in the logs
 	log.Printf("Admission Request Body: \n %v", string(body))
-	log.Printf("Admission Request Body2: \n %+v", admissionReviewReq)
+	// log.Printf("Admission Request Body2: \n %+v", admissionReviewReq)
 
 	return &admissionReviewReq, nil
 }
@@ -84,7 +84,8 @@ func buildResponse(w http.ResponseWriter, req v1beta1.AdmissionReview) (*v1beta1
 	}
 
 	// Construct Deployment name in the format: namespace/name
-	podName := pod.GetNamespace() + "/" + pod.GetName()
+	// podName := pod.GetNamespace() + "/" + pod.GetName()
+	podName := pod.GetNamespace() + "/" + pod.GetGenerateName()
 
 	// DEBUG
 	log.Printf("podName is: \n %v", podName)
@@ -151,7 +152,7 @@ func buildJsonPatch(pod *corev1.Pod, toleration corev1.Toleration) ([]byte, erro
 	patch := []patchOperation{
 		{
 			Op:    "replace",
-			Path:  "/spec/template/spec/tolerations",
+			Path:  "/spec/tolerations",
 			Value: tolerations,
 		},
 		{
