@@ -65,13 +65,18 @@ func parseRequest(w http.ResponseWriter, r *http.Request) (*v1beta1.AdmissionRev
 		return nil, fmt.Errorf("malformed admission review (request is nil)")
 	}
 
+	// DEBUG
+	// Print string(body) when you want to see the AdmissionReview in the logs
+	log.Printf("Admission Request Body: \n %v", string(body))
+	log.Printf("Admission Request Body2: \n %+v", admissionReviewReq)
+
 	return &admissionReviewReq, nil
 }
 
 // buildResponse builds the AdmissionReview response.
 func buildResponse(w http.ResponseWriter, req v1beta1.AdmissionReview) (*v1beta1.AdmissionReview, error) {
 
-	// Unmarshal the Deployment object from the AdmissionReview request into a Deployment struct.
+	// Unmarshal the Pod object from the AdmissionReview request into a Pod struct.
 	pod := corev1.Pod{}
 	err := json.Unmarshal(req.Request.Object.Raw, &pod)
 	if err != nil {
@@ -81,13 +86,14 @@ func buildResponse(w http.ResponseWriter, req v1beta1.AdmissionReview) (*v1beta1
 	// Construct Deployment name in the format: namespace/name
 	podName := pod.GetNamespace() + "/" + pod.GetName()
 
+	// DEBUG
+	log.Printf("podName is: \n %v", podName)
+
 	log.Printf("New Admission Review Request is being processed: User: %v \t Operation: %v \t Pod: %v \n",
 		req.Request.UserInfo.Username,
 		req.Request.Operation,
 		podName,
 	)
-	// Print string(body) when you want to see the AdmissionReview in the logs
-	// log.Printf("Admission Request Body: \n %v", string(body))
 
 	// Construct the AdmissionReview response.
 	admissionReviewResponse := v1beta1.AdmissionReview{
@@ -105,6 +111,7 @@ func buildResponse(w http.ResponseWriter, req v1beta1.AdmissionReview) (*v1beta1
 
 	//  Check if toleration is already set
 	if !tolerationExists(pod.Spec.Tolerations, toleration) {
+		log.Printf("Toleration %+v does not exist in pod %s", toleration, pod.Name)
 		patchBytes, err := buildJsonPatch(&pod, toleration)
 		if err != nil {
 			return nil, fmt.Errorf("could not build JSON patch: %s", err.Error())
