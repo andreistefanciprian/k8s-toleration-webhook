@@ -7,10 +7,10 @@ build:
 	docker image push $(DOCKER_IMAGE_NAME)
 
 template:
-	helm template --namespace toleration-webhook toleration-webhook infra/toleration-webhook --create-namespace
+	helm template --namespace toleration-webhook toleration-webhook infra/toleration-webhook --create-namespace --set GoogleCASClusterIssuer.enabled=true
 
 install:
-	helm upgrade --install toleration-webhook infra/toleration-webhook --namespace toleration-webhook --create-namespace
+	helm upgrade --install toleration-webhook infra/toleration-webhook --namespace toleration-webhook --create-namespace --set GoogleCASClusterIssuer.enabled=true
 
 uninstall:
 	helm uninstall toleration-webhook --namespace toleration-webhook

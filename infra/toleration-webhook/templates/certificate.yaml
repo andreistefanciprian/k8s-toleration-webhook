@@ -1,3 +1,14 @@
+{{- if not .Values.GoogleCASClusterIssuer.enabled -}}
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ include "toleration-webhook.fullname" . }}
+  labels:
+    {{- include "toleration-webhook.labels" . | nindent 4 }}
+spec:
+  selfSigned: {}
+{{- end }}
+---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
@@ -7,13 +18,21 @@ metadata:
   annotations:
     cert-manager.io/allow-direct-injection: "true"
 spec:
+  commonName: {{ include "toleration-webhook.fullname" . }}.{{ .Release.Namespace }}.svc
   dnsNames:
   - {{ include "toleration-webhook.fullname" . }}.{{ .Release.Namespace }}.svc
   - {{ include "toleration-webhook.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+  duration: 2160h0m0s
+  {{- if .Values.GoogleCASClusterIssuer.enabled }}
   issuerRef:
     group: cas-issuer.jetstack.io
     kind: GoogleCASClusterIssuer
-    name: googlecasclusterissuer
+    name: {{ .Values.GoogleCASClusterIssuer.name }}
+  {{- else }}
+  issuerRef:
+    kind: Issuer
+    name: {{ include "toleration-webhook.fullname" . }}
+  {{- end }}
   privateKey:
     rotationPolicy: Always
   renewBefore: 1080h0m0s

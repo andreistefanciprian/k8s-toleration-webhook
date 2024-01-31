@@ -64,3 +64,8 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+# Configure GoogleCASClusterIssuerCertificate or the selfSigned Certificate
+GoogleCASClusterIssuer:
+  enabled: false
+  name: googlecasclusterissuer
