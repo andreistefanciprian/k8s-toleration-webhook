@@ -72,7 +72,7 @@ func parseRequest(w http.ResponseWriter, r *http.Request) (*v1beta1.AdmissionRev
 	}
 
 	// DEBUG Print string(body) when you want to see the AdmissionReview in the logs
-	log.Printf("Admission Request Body: \n %v", string(body))
+	// log.Printf("Admission Request Body: \n %v", string(body))
 
 	return &admissionReviewReq, nil
 }
