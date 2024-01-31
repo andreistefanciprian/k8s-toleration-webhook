@@ -64,7 +64,14 @@ Build, Register, Deploy and Test the webhook using the provided tasks:
    make install
    ```
    
-4. Remove webhook:
+
+4. Test webhook:
+   ```
+   kustomize build infra/test-create | kubectl apply -f -
+   kustomize build infra/test-create | kubectl delete -f -
+   ```
+
+5. Remove webhook:
    ```
    make uninstall
    ```

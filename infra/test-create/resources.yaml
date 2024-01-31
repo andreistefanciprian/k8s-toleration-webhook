@@ -1,0 +1,94 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod
+  labels:
+    app: nginx
+  annotations:
+    testAnnotation: used-for-testing-purposes-priority
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-1
+  labels:
+    app: nginx
+  annotations:
+    testAnnotation: used-for-testing-purposes-priority
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+      tolerations:
+      - effect: NoExecute
+        key: SimulateNodeFailure
+        operator: Exists
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-2
+  labels:
+    app: nginx
+  annotations:
+    testAnnotation: used-for-testing-purposes-priority
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+      tolerations:
+      - effect: NoExecute
+        key: BLABLABLA
+        operator: Exists
+---
+# Verify priorityClassName does not get set on Deployments with priorityClassName already set to high-priority-nonpreempting
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-3
+  labels:
+    app: nginx
+  annotations:
+    testAnnotation: used-for-testing-purposes-priority
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
