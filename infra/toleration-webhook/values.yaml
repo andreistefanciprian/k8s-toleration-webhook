@@ -8,7 +8,7 @@ image:
   repository: andreistefanciprian/k8s-toleration-webhook
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
+  tag: "297f628ab2b48cd8948a964def3cd4adb777e7c8-5"
 
 imagePullSecrets: []
 nameOverride: ""
