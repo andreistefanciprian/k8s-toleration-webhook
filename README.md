@@ -1,4 +1,4 @@
-# K8s Mutating Webhook that adds toleration to Pods
+# K8s Mutating Webhook that adds toleration to Deployments
 
 ## Overview
 
