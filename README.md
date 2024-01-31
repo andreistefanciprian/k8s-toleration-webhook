@@ -61,14 +61,25 @@ Build, Register, Deploy and Test the webhook using the provided tasks:
 
 3. Deploy and Register webhook:
    ```
+   # install a test deployment before webhook is installed so we can test UPDATE Event later on
+   kustomize build infra/test-update | kubectl apply -f -
+
+   # install webhook
    make install
    ```
    
 
 4. Test webhook:
    ```
+   # check UPDATE Events
+   kubectl patch deployment test-has0tolerations -n boo --type='json' -p='[{"op": "add", "path": "/metadata/annotations/patch", "value": "test"}]'
+
+   # check CREATE Events
    kustomize build infra/test-create | kubectl apply -f -
+
+   # remove tests
    kustomize build infra/test-create | kubectl delete -f -
+   kustomize build infra/test-update | kubectl delete -f -
    ```
 
 5. Remove webhook:
