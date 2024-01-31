@@ -3,7 +3,7 @@
 ## Overview
 
 This project implements a Kubernetes MutatingAdmissionWebhook, serving as an [admission controller](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/) in the Kubernetes cluster. 
-The webhook intercepts Pod CREATE and UPDATE requests and automatically adds a toleration and annotation:
+The webhook intercepts Deployment CREATE and UPDATE requests and automatically adds a toleration and annotation:
 
 ```
 # Toleration added
@@ -51,7 +51,6 @@ Build, Register, Deploy and Test the webhook using the provided tasks:
 
 1. Build and push the Docker image to the container registry:
    ```
-   make unit-tests
    make build
    ```
 
