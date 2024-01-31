@@ -21,6 +21,11 @@ const (
 
 var (
 	deserializer = serializer.NewCodecFactory(runtime.NewScheme()).UniversalDeserializer()
+	toleration   = corev1.Toleration{
+		Key:      "SimulateNodeFailure",
+		Operator: corev1.TolerationOpExists,
+		Effect:   corev1.TaintEffectNoExecute,
+	}
 )
 
 // parseFlags parses the CLI params and returns a ServerParameters struct.
@@ -99,12 +104,6 @@ func buildResponse(w http.ResponseWriter, req v1beta1.AdmissionReview) (*v1beta1
 		},
 	}
 
-	toleration := corev1.Toleration{
-		Key:      "SimulateNodeFailure",
-		Operator: corev1.TolerationOpExists,
-		Effect:   corev1.TaintEffectNoExecute,
-	}
-
 	//  Check if toleration is already set
 	if !tolerationExists(deployment.Spec.Template.Spec.Tolerations, toleration) {
 		log.Printf("Toleration %+v does not exist in Deployment %s", toleration, deploymentName)
@@ -117,6 +116,7 @@ func buildResponse(w http.ResponseWriter, req v1beta1.AdmissionReview) (*v1beta1
 		patchMsg := fmt.Sprintf("Deployment %v was updated with toleration.", deploymentName)
 		stdoutMsg := fmt.Sprintf("Deployment %v does not have a toleration set.", deploymentName)
 		admissionReviewResponse.Response.Warnings = []string{stdoutMsg, patchMsg}
+		log.Println(patchMsg)
 	} else {
 		log.Printf("Toleration %v already exists in deployment %s, skipping addition", toleration, deploymentName)
 	}
