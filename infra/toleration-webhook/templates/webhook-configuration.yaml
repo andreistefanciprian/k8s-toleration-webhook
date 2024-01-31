@@ -14,9 +14,9 @@ webhooks:
     timeoutSeconds: 30
     rules:
       - operations: ["CREATE", "UPDATE"]
-        apiGroups: [""]
+        apiGroups: ["apps"]
         apiVersions: ["v1"]
-        resources: ["pods"]
+        resources: ["deployments"]
         scope: "Namespaced"
     namespaceSelector:
       matchExpressions:

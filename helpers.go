@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"k8s.io/api/admission/v1beta1"
+	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
@@ -65,10 +66,8 @@ func parseRequest(w http.ResponseWriter, r *http.Request) (*v1beta1.AdmissionRev
 		return nil, fmt.Errorf("malformed admission review (request is nil)")
 	}
 
-	// DEBUG
-	// Print string(body) when you want to see the AdmissionReview in the logs
+	// DEBUG Print string(body) when you want to see the AdmissionReview in the logs
 	log.Printf("Admission Request Body: \n %v", string(body))
-	// log.Printf("Admission Request Body2: \n %+v", admissionReviewReq)
 
 	return &admissionReviewReq, nil
 }
@@ -76,24 +75,20 @@ func parseRequest(w http.ResponseWriter, r *http.Request) (*v1beta1.AdmissionRev
 // buildResponse builds the AdmissionReview response.
 func buildResponse(w http.ResponseWriter, req v1beta1.AdmissionReview) (*v1beta1.AdmissionReview, error) {
 
-	// Unmarshal the Pod object from the AdmissionReview request into a Pod struct.
-	pod := corev1.Pod{}
-	err := json.Unmarshal(req.Request.Object.Raw, &pod)
+	// Unmarshal the Deployment object from the AdmissionReview request into a Deployment struct.
+	deployment := v1.Deployment{}
+	err := json.Unmarshal(req.Request.Object.Raw, &deployment)
 	if err != nil {
-		return nil, fmt.Errorf("could not unmarshal pod on admission request: %s", err.Error())
+		return nil, fmt.Errorf("could not unmarshal deployment on admission request: %s", err.Error())
 	}
 
 	// Construct Deployment name in the format: namespace/name
-	// podName := pod.GetNamespace() + "/" + pod.GetName()
-	podName := pod.GetNamespace() + "/" + pod.GetGenerateName()
-
-	// DEBUG
-	log.Printf("podName is: \n %v", podName)
+	deploymentName := deployment.GetNamespace() + "/" + deployment.GetName()
 
 	log.Printf("New Admission Review Request is being processed: User: %v \t Operation: %v \t Pod: %v \n",
 		req.Request.UserInfo.Username,
 		req.Request.Operation,
-		podName,
+		deploymentName,
 	)
 
 	// Construct the AdmissionReview response.
@@ -111,19 +106,19 @@ func buildResponse(w http.ResponseWriter, req v1beta1.AdmissionReview) (*v1beta1
 	}
 
 	//  Check if toleration is already set
-	if !tolerationExists(pod.Spec.Tolerations, toleration) {
-		log.Printf("Toleration %+v does not exist in pod %s", toleration, pod.Name)
-		patchBytes, err := buildJsonPatch(&pod, toleration)
+	if !tolerationExists(deployment.Spec.Template.Spec.Tolerations, toleration) {
+		log.Printf("Toleration %+v does not exist in Deployment %s", toleration, deploymentName)
+		patchBytes, err := buildJsonPatch(&deployment, toleration)
 		if err != nil {
 			return nil, fmt.Errorf("could not build JSON patch: %s", err.Error())
 		}
 		// admissionReviewResponse.Response.AuditAnnotations = deployment.ObjectMeta.Annotations // AuditAnnotations are added to the audit record when this admission response is added to the audit event.
 		admissionReviewResponse.Response.Patch = patchBytes
-		patchMsg := fmt.Sprintf("Pod %v was updated with toleration.", podName)
-		stdoutMsg := fmt.Sprintf("Pod %v does not have a toleration set.", podName)
+		patchMsg := fmt.Sprintf("Deployment %v was updated with toleration.", deploymentName)
+		stdoutMsg := fmt.Sprintf("Deployment %v does not have a toleration set.", deploymentName)
 		admissionReviewResponse.Response.Warnings = []string{stdoutMsg, patchMsg}
 	} else {
-		log.Printf("Toleration %v already exists in pod %s, skipping addition", toleration, pod.Name)
+		log.Printf("Toleration %v already exists in deployment %s, skipping addition", toleration, deploymentName)
 	}
 
 	return &admissionReviewResponse, nil
@@ -144,15 +139,15 @@ func sendResponse(w http.ResponseWriter, admissionReviewResponse v1beta1.Admissi
 }
 
 // buildJsonPatch builds a JSON patch to add a toleration and annotation to a Pod.
-func buildJsonPatch(pod *corev1.Pod, toleration corev1.Toleration) ([]byte, error) {
-	annotations := pod.ObjectMeta.Annotations
+func buildJsonPatch(deployment *v1.Deployment, toleration corev1.Toleration) ([]byte, error) {
+	annotations := deployment.ObjectMeta.Annotations
 	annotations["updated_by"] = "tolerationWebhook"
-	tolerations := pod.Spec.Tolerations
+	tolerations := deployment.Spec.Template.Spec.Tolerations
 	tolerations = append(tolerations, toleration)
 	patch := []patchOperation{
 		{
 			Op:    "replace",
-			Path:  "/spec/tolerations",
+			Path:  "/spec/template/spec/tolerations",
 			Value: tolerations,
 		},
 		{
