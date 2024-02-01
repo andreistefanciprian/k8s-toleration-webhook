@@ -23,5 +23,5 @@ check:
 logs:
 	kubectl logs -l app.kubernetes.io/name=toleration-webhook --namespace toleration-webhook -f
 
-unit-tests:
+test:
 	go test  ./... -v
