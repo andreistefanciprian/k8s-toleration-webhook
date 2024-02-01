@@ -83,20 +83,19 @@ func buildResponse(w http.ResponseWriter, req v1beta1.AdmissionReview) (*v1beta1
 	var targetObject runtime.Object
 	switch req.Request.Kind.Kind {
 	case "Deployment":
-		// Handle Deployment
 		// Unmarshal the Deployment object from the AdmissionReview request into a Deployment struct.
 		targetObject = &v1.Deployment{}
 	case "DaemonSet":
-		// Handle DaemonSet
 		// Unmarshal the DaemonSet object from the AdmissionReview request into a DaemonSet struct.
 		targetObject = &v1.DaemonSet{}
 	default:
 		return nil, fmt.Errorf("unsupported resource type: %s", req.Request.Kind.Kind)
 	}
 
+	resourceType := getResourceType(targetObject)
 	err := json.Unmarshal(req.Request.Object.Raw, targetObject)
 	if err != nil {
-		return nil, fmt.Errorf("could not unmarshal deployment on admission request: %s", err.Error())
+		return nil, fmt.Errorf("could not unmarshal %s on admission request: %s", resourceType, err.Error())
 	}
 
 	// Construct resource name in the format: namespace/name
@@ -118,19 +117,19 @@ func buildResponse(w http.ResponseWriter, req v1beta1.AdmissionReview) (*v1beta1
 
 	//  Check if toleration is already set
 	if !tolerationExists(targetObject, toleration) {
-		log.Printf("Toleration %+v does not exist in Deployment %s", toleration, resourceName)
+		log.Printf("Toleration does not exist in %s %s", resourceType, resourceName)
 		patchBytes, err := buildJsonPatch(targetObject, toleration)
 		if err != nil {
 			return nil, fmt.Errorf("could not build JSON patch: %s", err.Error())
 		}
 		// admissionReviewResponse.Response.AuditAnnotations = targetObject.ObjectMeta.Annotations // AuditAnnotations are added to the audit record when this admission response is added to the audit event.
 		admissionReviewResponse.Response.Patch = patchBytes
-		patchMsg := fmt.Sprintf("Deployment %v was updated with toleration.", resourceName)
-		stdoutMsg := fmt.Sprintf("Deployment %v does not have a toleration set.", resourceName)
+		patchMsg := fmt.Sprintf("%s %v was updated with toleration.", resourceType, resourceName)
+		stdoutMsg := fmt.Sprintf("%s %v does not have a toleration set.", resourceType, resourceName)
 		admissionReviewResponse.Response.Warnings = []string{stdoutMsg, patchMsg}
 		log.Println(patchMsg)
 	} else {
-		log.Printf("Toleration %v already exists in deployment %s, skipping addition", toleration, resourceName)
+		log.Printf("Toleration already exists in %s %s, skipping addition", resourceType, resourceName)
 	}
 
 	return &admissionReviewResponse, nil
@@ -233,4 +232,16 @@ func getResourceName(obj runtime.Object) string {
 		return ""
 	}
 	return meta.GetNamespace() + "/" + meta.GetName()
+}
+
+// getResourceType extracts and returns the resource type from the targetObject
+func getResourceType(targetObject runtime.Object) string {
+	switch targetObject.(type) {
+	case *v1.Deployment:
+		return "Deployment"
+	case *v1.DaemonSet:
+		return "DaemonSet"
+	default:
+		return "UnknownResource"
+	}
 }
