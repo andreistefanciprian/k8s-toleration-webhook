@@ -1,9 +1,9 @@
-# K8s Mutating Webhook that adds toleration to Deployments
+# K8s Mutating Webhook that adds toleration to Deployments and DaemonSets
 
 ## Overview
 
 This project implements a Kubernetes MutatingAdmissionWebhook, serving as an [admission controller](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/) in the Kubernetes cluster. 
-The webhook intercepts Deployment CREATE and UPDATE requests and automatically adds a toleration and annotation:
+The webhook intercepts Deployment/DaemonSet CREATE and UPDATE requests and automatically adds a toleration and annotation:
 
 ```
 # Toleration added
@@ -53,7 +53,7 @@ Build, Register, Deploy and Test the webhook using the provided tasks:
    ```
    # run unit tests
    make test
-   
+
    # build and push image
    make build
    ```
