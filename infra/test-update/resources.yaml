@@ -1,13 +1,36 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: test-has0tolerations
+  name: dep-has0tolerations
   labels:
     app: nginx
   annotations:
     testAnnotation: used-for-testing-purposes-priority
 spec:
   replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: ds-has0tolerations
+  labels:
+    app: nginx
+  annotations:
+    testAnnotation: used-for-testing-purposes-priority
+spec:
   selector:
     matchLabels:
       app: nginx

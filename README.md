@@ -72,10 +72,19 @@ Build, Register, Deploy and Test the webhook using the provided tasks:
 4. Test webhook:
    ```
    # check UPDATE Events
-   kubectl patch deployment test-has0tolerations -n boo --type='json' -p='[{"op": "add", "path": "/metadata/annotations/patch", "value": "test"}]'
+   kubectl patch deployment dep-has0tolerations -n boo --type='json' -p='[{"op": "add", "path": "/metadata/annotations/patch", "value": "test"}]'
+   kubectl get deployment dep-has0tolerations -n boo -o yaml
+   kubectl patch daemonset ds-has0tolerations -n boo --type='json' -p='[{"op": "add", "path": "/metadata/annotations/patch", "value": "test"}]'
+   kubectl get daemonset ds-has0tolerations -n boo -o yaml
 
    # check CREATE Events
    kustomize build infra/test-create | kubectl apply -f -
+   kubectl get daemonset ds-hasnotoleration -n boo -o yaml
+   kubectl get daemonset ds-hasothertoleration -n boo -o yaml
+   kubectl get daemonset ds-hastoleration -n boo -o yaml
+   kubectl get deployment dep-hasnotoleration -n boo -o yaml
+   kubectl get deployment dep-hasothertoleration -n boo -o yaml
+   kubectl get deployment dep-hastoleration -n boo -o yaml
 
    # remove tests
    kustomize build infra/test-create | kubectl delete -f -

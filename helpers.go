@@ -11,6 +11,7 @@ import (
 	"k8s.io/api/admission/v1beta1"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 )
@@ -79,21 +80,31 @@ func parseRequest(w http.ResponseWriter, r *http.Request) (*v1beta1.AdmissionRev
 
 // buildResponse builds the AdmissionReview response.
 func buildResponse(w http.ResponseWriter, req v1beta1.AdmissionReview) (*v1beta1.AdmissionReview, error) {
-
-	// Unmarshal the Deployment object from the AdmissionReview request into a Deployment struct.
-	deployment := v1.Deployment{}
-	err := json.Unmarshal(req.Request.Object.Raw, &deployment)
-	if err != nil {
-		return nil, fmt.Errorf("could not unmarshal deployment on admission request: %s", err.Error())
+	var targetObject runtime.Object
+	switch req.Request.Kind.Kind {
+	case "Deployment":
+		// Unmarshal the Deployment object from the AdmissionReview request into a Deployment struct.
+		targetObject = &v1.Deployment{}
+	case "DaemonSet":
+		// Unmarshal the DaemonSet object from the AdmissionReview request into a DaemonSet struct.
+		targetObject = &v1.DaemonSet{}
+	default:
+		return nil, fmt.Errorf("unsupported resource type: %s", req.Request.Kind.Kind)
 	}
 
-	// Construct Deployment name in the format: namespace/name
-	deploymentName := deployment.GetNamespace() + "/" + deployment.GetName()
+	resourceType := getResourceType(targetObject)
+	err := json.Unmarshal(req.Request.Object.Raw, targetObject)
+	if err != nil {
+		return nil, fmt.Errorf("could not unmarshal %s on admission request: %s", resourceType, err.Error())
+	}
+
+	// Construct resource name in the format: namespace/name
+	resourceName := getResourceName(targetObject)
 
 	log.Printf("New Admission Review Request is being processed: User: %v \t Operation: %v \t Pod: %v \n",
 		req.Request.UserInfo.Username,
 		req.Request.Operation,
-		deploymentName,
+		resourceName,
 	)
 
 	// Construct the AdmissionReview response.
@@ -105,20 +116,20 @@ func buildResponse(w http.ResponseWriter, req v1beta1.AdmissionReview) (*v1beta1
 	}
 
 	//  Check if toleration is already set
-	if !tolerationExists(deployment.Spec.Template.Spec.Tolerations, toleration) {
-		log.Printf("Toleration %+v does not exist in Deployment %s", toleration, deploymentName)
-		patchBytes, err := buildJsonPatch(&deployment, toleration)
+	if !tolerationExists(targetObject, toleration) {
+		log.Printf("Toleration does not exist in %s %s", resourceType, resourceName)
+		patchBytes, err := buildJsonPatch(targetObject, toleration)
 		if err != nil {
 			return nil, fmt.Errorf("could not build JSON patch: %s", err.Error())
 		}
-		// admissionReviewResponse.Response.AuditAnnotations = deployment.ObjectMeta.Annotations // AuditAnnotations are added to the audit record when this admission response is added to the audit event.
+		// admissionReviewResponse.Response.AuditAnnotations = targetObject.ObjectMeta.Annotations // AuditAnnotations are added to the audit record when this admission response is added to the audit event.
 		admissionReviewResponse.Response.Patch = patchBytes
-		patchMsg := fmt.Sprintf("Deployment %v was updated with toleration.", deploymentName)
-		stdoutMsg := fmt.Sprintf("Deployment %v does not have a toleration set.", deploymentName)
+		patchMsg := fmt.Sprintf("%s %v was updated with toleration.", resourceType, resourceName)
+		stdoutMsg := fmt.Sprintf("%s %v does not have a toleration set.", resourceType, resourceName)
 		admissionReviewResponse.Response.Warnings = []string{stdoutMsg, patchMsg}
 		log.Println(patchMsg)
 	} else {
-		log.Printf("Toleration %v already exists in deployment %s, skipping addition", toleration, deploymentName)
+		log.Printf("Toleration already exists in %s %s, skipping addition", resourceType, resourceName)
 	}
 
 	return &admissionReviewResponse, nil
@@ -139,11 +150,22 @@ func sendResponse(w http.ResponseWriter, admissionReviewResponse v1beta1.Admissi
 }
 
 // buildJsonPatch builds a JSON patch to add a toleration and annotation to a Pod.
-func buildJsonPatch(deployment *v1.Deployment, toleration corev1.Toleration) ([]byte, error) {
-	annotations := deployment.ObjectMeta.Annotations
+func buildJsonPatch(targetObject runtime.Object, toleration corev1.Toleration) ([]byte, error) {
+	annotations := getAnnotations(targetObject)
 	annotations["updated_by"] = "tolerationWebhook"
-	tolerations := deployment.Spec.Template.Spec.Tolerations
+
+	var tolerations []corev1.Toleration
+	switch obj := targetObject.(type) {
+	case *v1.Deployment:
+		tolerations = obj.Spec.Template.Spec.Tolerations
+	case *v1.DaemonSet:
+		tolerations = obj.Spec.Template.Spec.Tolerations
+	default:
+		return nil, fmt.Errorf("unsupported resource type for tolerations: %T", targetObject)
+	}
+
 	tolerations = append(tolerations, toleration)
+
 	patch := []patchOperation{
 		{
 			Op:    "replace",
@@ -156,6 +178,7 @@ func buildJsonPatch(deployment *v1.Deployment, toleration corev1.Toleration) ([]
 			Value: annotations,
 		},
 	}
+
 	// Marshal the patch slice to JSON.
 	patchBytes, err := json.Marshal(patch)
 	if err != nil {
@@ -165,8 +188,31 @@ func buildJsonPatch(deployment *v1.Deployment, toleration corev1.Toleration) ([]
 	return patchBytes, nil
 }
 
+// getAnnotations extracts and returns the annotations from the targetObject
+func getAnnotations(obj runtime.Object) map[string]string {
+	meta, err := meta.Accessor(obj)
+	if err != nil {
+		log.Printf("Error getting annotations: %v", err)
+		return nil
+	}
+	return meta.GetAnnotations()
+}
+
 // tolerationExists checks if a toleration already exists in a slice of tolerations.
-func tolerationExists(existingTolerations []corev1.Toleration, toleration corev1.Toleration) bool {
+func tolerationExists(targetObject runtime.Object, toleration corev1.Toleration) bool {
+	switch obj := targetObject.(type) {
+	case *v1.Deployment:
+		return tolerationExistsInSlice(obj.Spec.Template.Spec.Tolerations, toleration)
+	case *v1.DaemonSet:
+		return tolerationExistsInSlice(obj.Spec.Template.Spec.Tolerations, toleration)
+	default:
+		log.Printf("Unsupported resource type for toleration check: %T", targetObject)
+		return false
+	}
+}
+
+// tolerationExistsInSlice checks if a toleration already exists in a slice of tolerations.
+func tolerationExistsInSlice(existingTolerations []corev1.Toleration, toleration corev1.Toleration) bool {
 	for _, existing := range existingTolerations {
 		if existing.Key == toleration.Key &&
 			existing.Operator == toleration.Operator &&
@@ -176,4 +222,26 @@ func tolerationExists(existingTolerations []corev1.Toleration, toleration corev1
 		}
 	}
 	return false
+}
+
+// getResourceName extracts and returns the resource name in the format: namespace/name
+func getResourceName(obj runtime.Object) string {
+	meta, err := meta.Accessor(obj)
+	if err != nil {
+		log.Printf("Error getting resource name: %v", err)
+		return ""
+	}
+	return meta.GetNamespace() + "/" + meta.GetName()
+}
+
+// getResourceType extracts and returns the resource type from the targetObject
+func getResourceType(targetObject runtime.Object) string {
+	switch targetObject.(type) {
+	case *v1.Deployment:
+		return "Deployment"
+	case *v1.DaemonSet:
+		return "DaemonSet"
+	default:
+		return "UnknownResource"
+	}
 }

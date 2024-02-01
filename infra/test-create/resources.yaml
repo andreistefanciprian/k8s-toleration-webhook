@@ -15,7 +15,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: test-hastoleration
+  name: dep-hastoleration
   labels:
     app: nginx
   annotations:
@@ -43,7 +43,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: test-hasothertoleration
+  name: dep-hasothertoleration
   labels:
     app: nginx
   annotations:
@@ -72,13 +72,91 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: test-hasnotolerations
+  name: dep-hasnotoleration
   labels:
     app: nginx
   annotations:
     testAnnotation: used-for-testing-purposes-priority
 spec:
   replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: ds-hastoleration
+  labels:
+    app: nginx
+  annotations:
+    testAnnotation: used-for-testing-purposes-priority
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+      tolerations:
+      - effect: NoExecute
+        key: SimulateNodeFailure
+        operator: Exists
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: ds-hasothertoleration
+  labels:
+    app: nginx
+  annotations:
+    testAnnotation: used-for-testing-purposes-priority
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+      tolerations:
+      - effect: NoExecute
+        key: BLABLABLA
+        operator: Exists
+---
+# Verify priorityClassName does not get set on Deployments with priorityClassName already set to high-priority-nonpreempting
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: ds-hasnotoleration
+  labels:
+    app: nginx
+  annotations:
+    testAnnotation: used-for-testing-purposes-priority
+spec:
   selector:
     matchLabels:
       app: nginx
