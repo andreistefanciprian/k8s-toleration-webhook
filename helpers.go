@@ -81,18 +81,21 @@ func parseRequest(w http.ResponseWriter, r *http.Request) (*v1beta1.AdmissionRev
 // buildResponse builds the AdmissionReview response.
 func buildResponse(w http.ResponseWriter, req v1beta1.AdmissionReview) (*v1beta1.AdmissionReview, error) {
 	var targetObject runtime.Object
+	var resourceType string
+
 	switch req.Request.Kind.Kind {
 	case "Deployment":
 		// Unmarshal the Deployment object from the AdmissionReview request into a Deployment struct.
 		targetObject = &v1.Deployment{}
+		resourceType = "Deployment"
 	case "DaemonSet":
 		// Unmarshal the DaemonSet object from the AdmissionReview request into a DaemonSet struct.
 		targetObject = &v1.DaemonSet{}
+		resourceType = "DaemonSet"
 	default:
 		return nil, fmt.Errorf("unsupported resource type: %s", req.Request.Kind.Kind)
 	}
 
-	resourceType := getResourceType(targetObject)
 	err := json.Unmarshal(req.Request.Object.Raw, targetObject)
 	if err != nil {
 		return nil, fmt.Errorf("could not unmarshal %s on admission request: %s", resourceType, err.Error())
@@ -232,16 +235,4 @@ func getResourceName(obj runtime.Object) string {
 		return ""
 	}
 	return meta.GetNamespace() + "/" + meta.GetName()
-}
-
-// getResourceType extracts and returns the resource type from the targetObject
-func getResourceType(targetObject runtime.Object) string {
-	switch targetObject.(type) {
-	case *v1.Deployment:
-		return "Deployment"
-	case *v1.DaemonSet:
-		return "DaemonSet"
-	default:
-		return "UnknownResource"
-	}
 }
