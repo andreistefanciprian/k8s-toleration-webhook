@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 
 	"k8s.io/api/admission/v1beta1"
 	v1 "k8s.io/api/apps/v1"
@@ -132,7 +133,8 @@ func buildResponse(w http.ResponseWriter, req v1beta1.AdmissionReview) (*v1beta1
 		admissionReviewResponse.Response.Warnings = []string{stdoutMsg, patchMsg}
 		log.Println(patchMsg)
 		// Increment the mutatedCounter for the given k8s object
-		RecordMutatedObject(resourceName)
+
+		RecordMutatedObject(resourceType, strings.Split(resourceName, "/")[1], strings.Split(resourceName, "/")[0])
 	} else {
 		log.Printf("Toleration already exists in %s %s, skipping addition", resourceType, resourceName)
 	}

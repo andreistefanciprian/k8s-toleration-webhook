@@ -8,9 +8,9 @@ var (
 	mutatedCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "toleration_webhook_mutated_total",
-			Help: "Total number of objects mutated by the webhook",
+			Help: "Total number of k8s objects mutated by the toleration webhook",
 		},
-		[]string{"k8sObjectName"},
+		[]string{"objType", "name", "namespace"},
 	)
 )
 
@@ -19,6 +19,6 @@ func init() {
 	prometheus.MustRegister(mutatedCounter)
 }
 
-func RecordMutatedObject(k8sObjectName string) {
-	mutatedCounter.WithLabelValues(k8sObjectName).Inc()
+func RecordMutatedObject(objType, name, namespace string) {
+	mutatedCounter.WithLabelValues(objType, name, namespace).Inc()
 }
