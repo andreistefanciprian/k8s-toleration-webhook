@@ -37,6 +37,9 @@ spec:
             - name: https
               containerPort: 443
               protocol: TCP
+            - name: http-monitoring
+              containerPort: 8090
+              protocol: TCP
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
