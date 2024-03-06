@@ -131,6 +131,8 @@ func buildResponse(w http.ResponseWriter, req v1beta1.AdmissionReview) (*v1beta1
 		stdoutMsg := fmt.Sprintf("%s %v does not have a toleration set.", resourceType, resourceName)
 		admissionReviewResponse.Response.Warnings = []string{stdoutMsg, patchMsg}
 		log.Println(patchMsg)
+		// Increment the mutatedCounter for the given k8s object
+		RecordMutatedObject(resourceName)
 	} else {
 		log.Printf("Toleration already exists in %s %s, skipping addition", resourceType, resourceName)
 	}
