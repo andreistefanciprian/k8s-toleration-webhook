@@ -10,7 +10,7 @@ var (
 			Name: "toleration_webhook_mutated_total",
 			Help: "Total number of k8s objects mutated by the toleration webhook",
 		},
-		[]string{"objType", "name", "namespace"},
+		[]string{"event_type", "obj_type", "name", "namespace"},
 	)
 )
 
@@ -19,6 +19,6 @@ func init() {
 	prometheus.MustRegister(mutatedCounter)
 }
 
-func RecordMutatedObject(objType, name, namespace string) {
-	mutatedCounter.WithLabelValues(objType, name, namespace).Inc()
+func RecordMutatedObject(event_type, obj_type, name, namespace string) {
+	mutatedCounter.WithLabelValues(event_type, obj_type, name, namespace).Inc()
 }

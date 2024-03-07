@@ -134,7 +134,7 @@ func buildResponse(w http.ResponseWriter, req v1beta1.AdmissionReview) (*v1beta1
 		log.Println(patchMsg)
 		// Increment the mutatedCounter for the given k8s object
 
-		RecordMutatedObject(resourceType, strings.Split(resourceName, "/")[1], strings.Split(resourceName, "/")[0])
+		RecordMutatedObject(fmt.Sprintf("%v", req.Request.Operation), resourceType, strings.Split(resourceName, "/")[1], strings.Split(resourceName, "/")[0])
 	} else {
 		log.Printf("Toleration already exists in %s %s, skipping addition", resourceType, resourceName)
 	}
