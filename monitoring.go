@@ -7,7 +7,7 @@ import (
 var (
 	mutatedCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "toleration_webhook_mutated_total",
+			Name: "toleration_webhook_total",
 			Help: "Total number of k8s objects mutated by the toleration webhook",
 		},
 		[]string{"event_type", "obj_type", "name", "namespace", "mutated"},
