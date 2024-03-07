@@ -94,7 +94,7 @@ Build, Register, Deploy and Test the webhook using the provided tasks:
    k port-forward svc/toleration-webhook -n toleration-webhook 8090:8090
    http://localhost:8090/metrics
 
-![prometheus metrics](./prom_metrics.png "prometheus metrics")
+   ![prometheus metrics](./prom_metrics.png "prometheus metrics")
 
    # remove tests
    kustomize build infra/test-create | kubectl delete -f -
