@@ -38,6 +38,7 @@ func parseFlags() serverParameters {
 	flag.IntVar(&parameters.httpsPort, "httpsPort", 443, " Https server port (webhook endpoint).")
 	flag.StringVar(&parameters.certFile, "tlsCertFile", "/etc/webhook/certs/tls.crt", "File containing the x509 Certificate for HTTPS.")
 	flag.StringVar(&parameters.keyFile, "tlsKeyFile", "/etc/webhook/certs/tls.key", "File containing the x509 private key to --tlsCertFile.")
+	flag.IntVar(&parameters.httpPort, "httpPort", 9090, " Http server port (monitoring endpoint).")
 	flag.Parse()
 
 	return parameters

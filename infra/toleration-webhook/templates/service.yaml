@@ -12,7 +12,7 @@ spec:
       protocol: TCP
       name: https
     - name: http-monitoring
-      port: 8090
+      port: {{ .Values.service.monitoringPort }}
       protocol: TCP
       targetPort: http-monitoring
   selector:

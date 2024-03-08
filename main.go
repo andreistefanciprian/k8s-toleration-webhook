@@ -34,11 +34,12 @@ func main() {
 		}
 	}()
 
-	// Expose Prometheus metrics
+	// Start the http server
+	httpAddr := ":" + strconv.Itoa(parameters.httpPort)
 	http.Handle("/metrics", promhttp.Handler())
-	err := http.ListenAndServe(":8090", nil)
+	log.Printf("Starting http Server on port %s", httpAddr)
+	err := http.ListenAndServe(httpAddr, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 }
