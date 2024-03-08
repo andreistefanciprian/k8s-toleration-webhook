@@ -2,7 +2,8 @@ package main
 
 // ServerParameters struct holds the parameters for the webhook server.
 type serverParameters struct {
-	httpsPort int    // https server port
+	httpsPort int    // https server port used for webhook endpoint
+	httpPort  int    // http server port used for monitoring
 	certFile  string // path to the x509 certificate for https
 	keyFile   string // path to the x509 private key matching `CertFile`
 }

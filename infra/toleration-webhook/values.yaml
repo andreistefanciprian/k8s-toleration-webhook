@@ -8,7 +8,7 @@ image:
   repository: andreistefanciprian/k8s-toleration-webhook
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "a46b74a8cb3eee297fb94a85af0e7f24951ff652-13"
+  tag: "a90a32873e3f4424b910031619c4f72fefcb959b-24"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -39,6 +39,7 @@ securityContext: {}
 service:
   type: ClusterIP
   port: 443
+  monitoringPort: 9090
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious

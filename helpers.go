@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 
 	"k8s.io/api/admission/v1beta1"
 	v1 "k8s.io/api/apps/v1"
@@ -37,6 +38,7 @@ func parseFlags() serverParameters {
 	flag.IntVar(&parameters.httpsPort, "httpsPort", 443, " Https server port (webhook endpoint).")
 	flag.StringVar(&parameters.certFile, "tlsCertFile", "/etc/webhook/certs/tls.crt", "File containing the x509 Certificate for HTTPS.")
 	flag.StringVar(&parameters.keyFile, "tlsKeyFile", "/etc/webhook/certs/tls.key", "File containing the x509 private key to --tlsCertFile.")
+	flag.IntVar(&parameters.httpPort, "httpPort", 9090, " Http server port (monitoring endpoint).")
 	flag.Parse()
 
 	return parameters
@@ -131,8 +133,12 @@ func buildResponse(w http.ResponseWriter, req v1beta1.AdmissionReview) (*v1beta1
 		stdoutMsg := fmt.Sprintf("%s %v does not have a toleration set.", resourceType, resourceName)
 		admissionReviewResponse.Response.Warnings = []string{stdoutMsg, patchMsg}
 		log.Println(patchMsg)
+		// Record the object in Prometheus
+		RecordObject(fmt.Sprintf("%v", req.Request.Operation), resourceType, strings.Split(resourceName, "/")[1], strings.Split(resourceName, "/")[0], "true")
 	} else {
 		log.Printf("Toleration already exists in %s %s, skipping addition", resourceType, resourceName)
+		// Record the object in Prometheus
+		RecordObject(fmt.Sprintf("%v", req.Request.Operation), resourceType, strings.Split(resourceName, "/")[1], strings.Split(resourceName, "/")[0], "false")
 	}
 
 	return &admissionReviewResponse, nil

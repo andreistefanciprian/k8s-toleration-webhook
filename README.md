@@ -102,6 +102,16 @@ Build, Register, Deploy and Test the webhook using the provided tasks:
 
 Feel free to adjust the tasks and configurations as needed to fit your specific environment.
 
+## Monitoring with Prometheus metrics
+
+![prometheus metrics](./prom_metrics.png "prometheus metrics")
+
+```
+# Check prometheus metrics
+k port-forward svc/toleration-webhook -n toleration-webhook 9090:8090
+http://localhost:9090/metrics
+```
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE). Feel free to use and modify it according to your requirements.
