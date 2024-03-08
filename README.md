@@ -108,8 +108,8 @@ Feel free to adjust the tasks and configurations as needed to fit your specific 
 
 ```
 # Check prometheus metrics
-k port-forward svc/toleration-webhook -n toleration-webhook 8090:8090
-http://localhost:8090/metrics
+k port-forward svc/toleration-webhook -n toleration-webhook 9090:8090
+http://localhost:9090/metrics
 ```
 
 ## License
