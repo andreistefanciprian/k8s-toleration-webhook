@@ -2,8 +2,8 @@
 
 ## Overview
 
-This project implements a Kubernetes MutatingAdmissionWebhook, serving as an [admission controller](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/) in the Kubernetes cluster. 
-The webhook intercepts Deployment/DaemonSet CREATE and UPDATE requests and automatically adds a toleration and annotation:
+This project implements a Kubernetes Admission Control Webhook that leverages the [MutatingAdmissionWebhook](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/) Controller.
+This Webhook intercepts Deployment and DaemonSet CREATE and UPDATE K8s API requests and adds a toleration and annotation:
 
 ```
 # Toleration added
