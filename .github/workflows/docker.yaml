@@ -73,16 +73,3 @@ jobs:
           subject-name: docker.io/${{ env.IMAGE_NAME }}
           subject-digest: ${{ steps.build-and-push.outputs.digest }}
           push-to-registry: true
-      -
-        name: Add attestation link to summary
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const digest = `${{ steps.build-and-push.outputs.digest }}`.replace('sha256:', '');
-            const runId = `${{ github.run_id }}`;
-            // The correct GitHub attestation link uses the attestation ID, not the run_id.
-            // Unfortunately, attestation ID is not available as a workflow variable.
-            // Instead, link to the main attestations page for the repo for user navigation.
-            const ghAttestationUrl = `https://github.com/andreistefanciprian/k8s-toleration-webhook/attestations/${runId}`;
-            core.summary.addRaw(`**GitHub Attestations:** [View all on GitHub](${ghAttestationUrl})\n`);
-            core.summary.write()
