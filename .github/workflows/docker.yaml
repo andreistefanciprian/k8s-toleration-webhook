@@ -44,7 +44,7 @@ jobs:
     needs: unit-tests
     runs-on: ubuntu-latest
     env:
-      IMAGE_NAME: ghcr.io/${{ github.repository }}:${{ github.sha }}-${{ github.run_number }}
+      IMAGE_NAME: ghcr.io/andreistefanciprian/k8s-toleration-webhook:${{ github.sha }}-${{ github.run_number }}
     steps:
       -
         name: Set up Docker Buildx
