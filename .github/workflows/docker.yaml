@@ -76,6 +76,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const image = 'docker.io/andreistefanciprian/k8s-toleration-webhook@${{ steps.build-and-push.outputs.digest }}';
-            core.summary.addRaw(`**Attestation:** [View on Docker Hub](https://hub.docker.com/layers/${image})\n`)
+            const digest = `${{ steps.build-and-push.outputs.digest }}`.replace('sha256:', '');
+            const url = `https://hub.docker.com/r/andreistefanciprian/k8s-toleration-webhook/digest/sha256:${digest}`;
+            core.summary.addRaw(`**Attestation:** [View on Docker Hub](${url})\n`)
             core.summary.write()
