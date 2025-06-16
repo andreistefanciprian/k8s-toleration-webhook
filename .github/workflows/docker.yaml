@@ -72,5 +72,5 @@ jobs:
           subject-digest: ${{ steps.build-and-push.outputs.digest }}
           push-to-registry: true
 
-    environment:
+    env:
       IMAGE_NAME: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/k8s-toleration-webhook:${{ github.sha }}-${{ github.run_number }}
