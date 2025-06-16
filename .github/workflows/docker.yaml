@@ -79,6 +79,8 @@ jobs:
         with:
           script: |
             const digest = `${{ steps.build-and-push.outputs.digest }}`.replace('sha256:', '');
-            const url = `https://hub.docker.com/r/andreistefanciprian/k8s-toleration-webhook/digest/sha256:${digest}`;
-            core.summary.addRaw(`**Attestation:** [View on Docker Hub](${url})\n`)
+            const dockerHubUrl = `https://hub.docker.com/r/andreistefanciprian/k8s-toleration-webhook/digest/sha256:${digest}`;
+            const ghAttestationUrl = `https://github.com/andreistefanciprian/k8s-toleration-webhook/attestations/${{ github.run_id }}`;
+            core.summary.addRaw(`**Attestation:** [View on Docker Hub](${dockerHubUrl})\n`);
+            core.summary.addRaw(`**GitHub Attestation:** [View on GitHub](${ghAttestationUrl})\n`);
             core.summary.write()
