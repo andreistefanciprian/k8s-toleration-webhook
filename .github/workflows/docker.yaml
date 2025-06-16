@@ -79,8 +79,10 @@ jobs:
         with:
           script: |
             const digest = `${{ steps.build-and-push.outputs.digest }}`.replace('sha256:', '');
-            const dockerHubUrl = `https://hub.docker.com/r/andreistefanciprian/k8s-toleration-webhook/digest/sha256:${digest}`;
-            const ghAttestationUrl = `https://github.com/andreistefanciprian/k8s-toleration-webhook/attestations/${{ github.run_id }}`;
-            core.summary.addRaw(`**Attestation:** [View on Docker Hub](${dockerHubUrl})\n`);
-            core.summary.addRaw(`**GitHub Attestation:** [View on GitHub](${ghAttestationUrl})\n`);
+            const runId = `${{ github.run_id }}`;
+            // The correct GitHub attestation link uses the attestation ID, not the run_id.
+            // Unfortunately, attestation ID is not available as a workflow variable.
+            // Instead, link to the main attestations page for the repo for user navigation.
+            const ghAttestationUrl = `https://github.com/andreistefanciprian/k8s-toleration-webhook/attestations/${runId}`;
+            core.summary.addRaw(`**GitHub Attestations:** [View all on GitHub](${ghAttestationUrl})\n`);
             core.summary.write()
