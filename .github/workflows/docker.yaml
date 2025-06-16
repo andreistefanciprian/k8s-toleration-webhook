@@ -53,6 +53,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
         name: Build and push with SBOM and Attestation
+        id: build-and-push
         uses: docker/build-push-action@v5
         with:
           file: infra/Dockerfile
@@ -70,6 +71,6 @@ jobs:
         name: Attest build provenance
         uses: actions/attest-build-provenance@v1
         with:
-          subject-name: ${{ github.repository }}
-          subject-digest: ${{ github.sha }}
+          subject-name: ${{ github.repository }}:${{ github.sha }}-${{ github.run_number }}
+          subject-digest: ${{ steps.build-and-push.outputs.digest }}
           push-to-registry: true
