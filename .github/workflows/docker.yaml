@@ -62,7 +62,7 @@ jobs:
           push: true
           provenance: true
           sbom: true
-          tags: ${{ github.repository }}:${{ github.sha }}-${{ github.run_number }}
+          tags: andreistefanciprian/k8s-toleration-webhook:${{ github.sha }}-${{ github.run_number }}
       
       -
         name: Attest build provenance
