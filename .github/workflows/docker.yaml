@@ -68,6 +68,6 @@ jobs:
         name: Attest build provenance
         uses: actions/attest-build-provenance@v1
         with:
-          subject-name: docker.io/${{ github.repository }}
+          subject-name: docker.io/andreistefanciprian/k8s-toleration-webhook
           subject-digest: ${{ steps.build-and-push.outputs.digest }}
           push-to-registry: true
