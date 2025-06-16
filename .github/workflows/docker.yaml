@@ -62,17 +62,15 @@ jobs:
           push: true
           provenance: true
           sbom: true
-          tags: ${{ github.repository }}:${{ github.sha }}-${{ github.run_number }}
-      -
-        name: Upload SBOM artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: sbom
-          path: ./sbom-*.spdx.json
+          tags: ${{ env.IMAGE_NAME }}
+      
       -
         name: Attest build provenance
         uses: actions/attest-build-provenance@v1
         with:
-          subject-name: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/k8s-toleration-webhook:${{ github.sha }}-${{ github.run_number }}
+          subject-name: ${{ env.IMAGE_NAME }}
           subject-digest: ${{ steps.build-and-push.outputs.digest }}
           push-to-registry: true
+
+    environment:
+      IMAGE_NAME: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/k8s-toleration-webhook:${{ github.sha }}-${{ github.run_number }}
