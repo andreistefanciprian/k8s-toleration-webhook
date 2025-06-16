@@ -62,15 +62,12 @@ jobs:
           push: true
           provenance: true
           sbom: true
-          tags: ${{ env.IMAGE_NAME }}
+          tags: ${{ github.repository }}:${{ github.sha }}-${{ github.run_number }}
       
       -
         name: Attest build provenance
         uses: actions/attest-build-provenance@v1
         with:
-          subject-name: ${{ env.IMAGE_NAME }}
+          subject-name: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/k8s-toleration-webhook@${{ steps.build-and-push.outputs.digest }}
           subject-digest: ${{ steps.build-and-push.outputs.digest }}
           push-to-registry: true
-
-    env:
-      IMAGE_NAME: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/k8s-toleration-webhook:${{ github.sha }}-${{ github.run_number }}
